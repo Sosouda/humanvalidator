@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY app ./app
 COPY main.py ./
 
-# Права: только app может писать в data/ (не требуем data/.gitkeep в контексте)
-RUN mkdir -p data && chown -R app:app /app && chmod 700 data
+# Права: data может быть смонтирована с хоста как root — делаем 777 чтобы app мог писать app.db/app.log, fallback в main.py на /tmp если нет
+RUN mkdir -p data && chown -R app:app /app && chmod 777 data
 
 USER app
 EXPOSE 8000

@@ -14,15 +14,24 @@ import json
 
 from pathlib import Path as _LogPath
 _log_file = _LogPath(__file__).parent / "data" / "app.log"
-_log_file.parent.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(str(_log_file), encoding="utf-8", mode="a"),
-    ],
-)
+try:
+    _log_file.parent.mkdir(parents=True, exist_ok=True)
+    # пробуем создать файл, если нет прав — fallback только на консоль
+    _handlers = [logging.StreamHandler()]
+    try:
+        _handlers.append(logging.FileHandler(str(_log_file), encoding="utf-8", mode="a"))
+    except PermissionError:
+        # data смонтирована с хоста как root — пишем в /tmp
+        _log_file = _LogPath("/tmp/app.log")
+        _handlers.append(logging.FileHandler(str(_log_file), encoding="utf-8", mode="a"))
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        handlers=_handlers,
+    )
+except Exception as e:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
+    logging.warning(f"FileHandler { _log_file } не доступен: {e}, логи только в консоль")
 # глушим шум от polling, но оставляем INFO для vision API
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -75,8 +84,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        # CSP для внутренних шаблонов — строгий, без inline js
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'"
+        # CSP — разрешаем inline для переключателя мобилка/десктоп (base.html)
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'"
         return response
 app.add_middleware(SecurityHeadersMiddleware)
 
