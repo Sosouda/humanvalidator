@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <h2 style="flex:1">Таблица смен — {{month}}/{{year}}</h2>
+    <form method="get" style="display:flex;gap:8px">
+      <input type="number" name="year" value="{{year}}" style="width:90px">
+      <input type="number" name="month" value="{{month}}" min="1" max="12" style="width:70px">
+      <button class="btn btn-ghost">Показать</button>
+    </form>
+    <a class="btn btn-primary" href="/export/excel?year={{year}}&month={{month}}">⬇ Excel</a>
+  </div>
+  <div class="grid" style="margin:12px 0">
+    <div class="stat" style="background:#16a34a"><b>Принято</b><p>{{cnt_accept}} сообщений</p></div>
+    <div class="stat" style="background:#ca8a04"><b>Ручная проверка</b><p>{{cnt_manual}}</p></div>
+    <div class="stat" style="background:#dc2626"><b>Отклонено</b><p>{{cnt_reject}}</p></div>
+    <div class="stat" style="background:#2563eb"><b>Групп</b><p>до 200 • очередь гарантирована</p></div>
+  </div>
+  <style>
+  .shifts-wrap{overflow:auto;max-height:70vh;border:1px solid #e2e8f0;border-radius:12px}
+  .shifts-wrap table{table-layout:fixed;border-collapse:separate;border-spacing:0;min-width:3500px}
+  .shifts-wrap th{position:sticky;top:0;z-index:3;background:#f1f5f9;white-space:nowrap;font-size:12px;padding:8px 8px}
+  .shifts-wrap td{padding:8px 4px;text-align:center;white-space:nowrap;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .shifts-wrap th:first-child,.shifts-wrap td:first-child{position:sticky;left:0;z-index:4;min-width:320px;max-width:320px;text-align:left;background:#fff;font-weight:600;padding-left:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .shifts-wrap th:first-child{z-index:5;background:#f1f5f9}
+  .shifts-wrap th:last-child,.shifts-wrap td:last-child{position:sticky;right:0;z-index:4;min-width:80px;max-width:80px;background:#f8fafc;font-weight:700}
+  .shifts-wrap th:last-child{z-index:5;background:#f1f5f9}
+  .shifts-wrap td:nth-child(n+2):nth-child(-n+32){width:32px;min-width:32px;max-width:32px}
+  </style>
+  <div class="shifts-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Ф.И.О.</th>
+        {% for d in days %}<th>{{d}}</th>{% endfor %}
+        <th>кол.смен</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{r.employee.full_name}}</td>
+        {% for d in days %}
+          {% if r.map.get(d) %}<td class="cell-1">1</td>{% else %}<td></td>{% endif %}
+        {% endfor %}
+        <td>{{r.total}}</td>
+      </tr>
+      {% endfor %}
+      <tr class="totals">
+        <td>ИТОГ:</td>
+        {% for t in totals %}<td>{{t}}</td>{% endfor %}
+        <td>{{grand_total}}</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:#64748b;font-size:12px;margin-top:8px">Фото = 1 в таблице. Дубли не создают вторую отметку. Ссылка на основание — в журнале. Значение ставится только при однозначном определении сотрудника и попадании в окно времени.</p>
+</div>
+{% endblock %}

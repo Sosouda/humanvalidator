@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+.idea
+.vscode
+.git
+.gitignore
+data/*.db
+data/*.log
+data/*.json
+data/app.log
+.env
+.env.*
+!data/.gitkeep
+*.tmp
+.DS_Store

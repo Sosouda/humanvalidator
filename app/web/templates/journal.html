@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.journal-wrap{overflow:auto;max-width:100%;border:1px solid #e2e8f0;border-radius:10px}
+.journal-wrap table{min-width:1450px;table-layout:fixed}
+.journal-wrap th{font-size:11px;letter-spacing:0.2px;padding:8px 6px;white-space:nowrap;top:0;z-index:3}
+.journal-wrap td{font-size:12px;padding:6px;white-space:normal;word-break:break-word}
+.journal-wrap td:nth-child(1){width:130px;white-space:nowrap}
+.journal-wrap td:nth-child(2){width:110px;white-space:nowrap}
+.journal-wrap td:nth-child(3){width:145px;white-space:nowrap}
+.journal-wrap td:nth-child(4){width:145px}
+.journal-wrap td:nth-child(5){width:135px}
+.journal-wrap td:nth-child(6){width:120px;white-space:nowrap}
+.journal-wrap td:nth-child(7){width:95px;white-space:nowrap}
+.journal-wrap td:nth-child(8){width:140px}
+.journal-wrap td:nth-child(9){width:320px;text-align:left}
+.journal-wrap th:nth-child(9){text-align:left}
+</style>
+<div class="card">
+  <h2>Журнал обработки — Приложение 1</h2>
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <select name="status"><option value="">Все статусы</option><option value="принято" {% if status=="принято" %}selected{% endif %}>принято</option><option value="ручная_проверка" {% if status=="ручная_проверка" %}selected{% endif %}>ручная проверка</option><option value="отклонено" {% if status=="отклонено" %}selected{% endif %}>отклонено</option><option value="дубликат" {% if status=="дубликат" %}selected{% endif %}>дубликат</option></select>
+    <input name="q" placeholder="поиск по подписи/причине" value="{{q}}" style="flex:1;min-width:200px">
+    <button class="btn btn-ghost">Фильтр</button>
+  </form>
+  <div class="journal-wrap">
+  <table>
+    <thead><tr><th>ID сообщения</th><th>Группа</th><th>Дата/время МСК</th><th>OCR дата с фото (МСК)</th><th>Нейронка</th><th>Сотрудник</th><th>Дата смены</th><th>Статус</th><th>Основание</th></tr></thead>
+    <tbody>
+    {% for l in logs %}
+      <tr>
+        <td>{{l.tg_chat_id}}:{{l.tg_message_id}}</td>
+        <td>{{l.tg_chat_id}}</td>
+        <td>{{l.date_time|msk}}</td>
+        <td>{% if l.photo_ocr_datetime %}<span style="color:#16a34a">{{l.photo_ocr_datetime|msk}}</span><br><small>{{l.photo_ocr_text[:40]}}</small>{% else %}<small style="color:#94a3b8">— (время сообщения МСК)</small>{% endif %}</td>
+        <td>{% if l.vision_person_detected==True %}<span class="badge badge-accepted">человек ✔</span>{% elif l.vision_person_detected==False %}<span class="badge badge-rejected">нет чел.</span>{% else %}<span class="badge" style="background:#f1f5f9">—</span>{% endif %}<br><small style="color:#64748b">{{l.vision_reason[:60] if l.vision_reason else ""}}</small></td>
+        <td>{{ emp_map.get(l.employee_id, "—") if l.employee_id else "—" }}</td>
+        <td>{{l.shift_date or "—"}}</td>
+        <td><span class="badge badge-{{'accepted' if l.status=='принято' else 'manual' if l.status=='ручная_проверка' else 'rejected' if l.status=='отклонено' else 'duplicate'}}">{{l.status}}</span><br><small style="color:#64748b">{{l.reason[:100]}}</small></td>
+        <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis"><div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{l.caption or "—"}}</div><a href="{{l.base_link}}" target="_blank" style="font-size:12px">🔗 {{l.base_link}}</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

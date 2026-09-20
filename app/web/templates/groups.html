@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+<h2>Группы — только супергруппы/каналы для ссылок (§7)</h2>
+<p style="color:#b45309;font-size:13px">⚠️ Обычная группа <code>tg://</code> не дает <code>t.me/c/</code> ссылку. Для хранения ссылок (§7) переведите группу в супергруппу или используйте канал. Система хранит ссылки, а не файлы.</p>
+<table>
+<thead><tr><th>tg_id (chat)</th><th>Название</th><th>Тип</th><th>Объект</th><th>Вкл</th><th>Действия</th></tr></thead>
+<tbody>{% for g in groups %}<tr><td>{{g.tg_id}}</td><td>{{g.title}}</td><td><span class="badge {% if g.group_type=='supergroup' %}badge-accepted{% elif g.group_type=='channel' %}badge-duplicate{% else %}badge-rejected{% endif %}">{{g.group_type}}</span></td><td>{{g.facility_id or "—"}}</td><td>{{"да" if g.is_enabled else "нет"}}</td><td>{% if current_user.role=='admin' %}<form method="post" action="/groups/{{g.id}}/toggle" style="display:inline"><button class="btn btn-ghost" style="padding:4px 8px">{{"выкл" if g.is_enabled else "вкл"}}</button></form>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% if current_user.role=='admin' %}
+<form method="post" action="/groups/add" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<input name="tg_id" placeholder="tg_id напр. -100123456" required>
+<input name="title" placeholder="Название группы" required>
+<input name="facility_id" placeholder="facility id (опц.)">
+<select name="group_type"><option value="supergroup">supergroup (рекомендуется)</option><option value="channel">channel</option><option value="group">group (обычная — без t.me/c)</option></select>
+<button class="btn btn-primary">Добавить группу</button>
+</form>
+{% else %}<p style="color:#64748b;font-size:12px">Добавление групп — только для админа.</p>{% endif %}
+</div>
+<div class="card">
+<h2>Объекты (Facility) — флаг автоотметки (§6)</h2>
+<table><thead><tr><th>ID</th><th>Название</th><th>Окна (§7 везде одинаково)</th><th>Cutoff</th><th>Автоотметка</th><th></th></tr></thead>
+<tbody>{% for f in facilities %}<tr><td>{{f.id}}</td><td>{{f.name}}</td><td>{{f.time_windows}}</td><td>{{f.midnight_cutoff_hour}}ч</td><td>{% if f.auto_mark_allowed %}<span class="badge badge-accepted">разрешена</span>{% else %}<span class="badge badge-rejected">запрещена → только ручная</span>{% endif %}</td><td>{% if current_user.role=='admin' %}<form method="post" action="/facilities/{{f.id}}/toggle"><button class="btn btn-ghost" style="padding:4px 8px">переключить</button></form>{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% if current_user.role=='admin' %}
+<form method="post" action="/facilities/add" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<input name="name" placeholder="Название объекта" required>
+<input name="time_windows" placeholder="06:00-12:00" value="06:00-12:00" style="width:160px">
+<input name="midnight_cutoff_hour" type="number" placeholder="cutoff ч" value="4" style="width:80px">
+<label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="auto_mark_allowed" checked> автоотметка</label>
+<button class="btn btn-primary">Добавить объект</button>
+</form>
+{% else %}<p style="color:#64748b;font-size:12px">Добавление объектов — только для админа.</p>{% endif %}
+<p style="color:#64748b;font-size:12px">Если флаг выкл — даже при идеальном фото+подписи/нейронке/OCR объект уйдет на <code>ручная_проверка</code>. Везде одинаковые правила (§3).</p>
+</div>
+{% endblock %}

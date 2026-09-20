@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TG → Shifts</title>
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{margin:0;background:#f6f7fb;color:#1a1a2e}
+nav{background:#1e293b;color:#fff;padding:12px 20px;display:flex;gap:18px;align-items:center;position:sticky;top:0;z-index:10}
+nav a{color:#cbd5e1;text-decoration:none;padding:6px 10px;border-radius:8px}
+nav a.active,nav a:hover{background:#334155;color:#fff}
+.container{max-width:1300px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:18px;margin-bottom:18px}
+h2{margin:0 0 12px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;vertical-align:top;word-break:break-word}
+th{background:#f1f5f9;position:sticky;top:58px;z-index:2;white-space:nowrap}
+td{white-space:normal}
+td:first-child,th:first-child{text-align:left;min-width:180px}
+.cell-1{background:#dcfce7;font-weight:700}
+.totals{background:#fef9c3;font-weight:700}
+.badge{padding:2px 8px;border-radius:999px;font-size:12px}
+.badge-accepted{background:#dcfce7;color:#166534}
+.badge-manual{background:#fef9c3;color:#854d0e}
+.badge-rejected{background:#fee2e2;color:#991b1b}
+.badge-duplicate{background:#e0e7ff;color:#3730a3}
+.btn{padding:8px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-ghost{background:#f1f5f9}
+input,select{padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.stat{padding:14px;border-radius:14px;color:#fff}
+.stat p{margin:4px 0 0 0;opacity:.9}
+</style>
+</head>
+<body>
+<nav>
+  <b style="font-size:18px">📋 TG→Смены</b>
+  {% if current_user is defined and current_user %}
+    <a href="/" class="{{'active' if request.url.path=='/' else ''}}">Таблица</a>
+    <a href="/groups" class="{{'active' if '/groups' in request.url.path else ''}}">Группы</a>
+    <a href="/employees" class="{{'active' if '/employees' in request.url.path else ''}}">Сотрудники</a>
+    {% if current_user.role in ['admin','operator'] %}
+      <a href="/journal" class="{{'active' if '/journal' in request.url.path else ''}}">Журнал</a>
+      <a href="/manual" class="{{'active' if '/manual' in request.url.path else ''}}">Ручная проверка</a>
+    {% endif %}
+    {% if current_user.role == 'admin' %}
+      <a href="/users" class="{{'active' if '/users' in request.url.path else ''}}">Пользователи</a>
+    {% endif %}
+    <span style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <span style="opacity:.8">{{current_user.username}} ({{current_user.role}})</span>
+      <a href="/logout" style="background:#475569;padding:6px 10px;border-radius:8px;color:#fff">Выйти</a>
+    </span>
+  {% else %}
+    <a href="/login" style="margin-left:auto">Вход</a>
+  {% endif %}
+</nav>
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+</body>
+</html>

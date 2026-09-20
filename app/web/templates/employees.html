@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+<h2>Сотрудники / Справочник</h2>
+<table><thead><tr><th>ID</th><th>ФИО</th><th>TG user_id</th><th>username</th><th>Алиасы</th></tr></thead>
+<tbody>{% for e in employees %}<tr><td>{{e.id}}</td><td>{{e.full_name}} {% if employees|selectattr('full_name','equalto',e.full_name)|list|length >1 %}<small style="color:#64748b">#{{e.id}}</small>{% endif %}</td><td>{{e.telegram_user_id or "—"}}</td><td>{{e.telegram_username or "—"}}</td><td>{{e.aliases}}</td></tr>{% endfor %}</tbody>
+</table>
+{% if current_user.role=='admin' %}
+<form method="post" action="/employees/add" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<input name="full_name" placeholder="Фамилия напр. Мехоношин" required>
+<input name="telegram_user_id" placeholder="TG user_id">
+<input name="telegram_username" placeholder="@username">
+<input name="aliases" placeholder="алиасы через запятую">
+<button class="btn btn-primary">Добавить</button>
+</form>
+{% else %}<p style="color:#64748b;font-size:12px">Добавление сотрудников — только для админа.</p>{% endif %}
+<p style="color:#64748b;font-size:12px">Идентификация: по шаблону подписи, по фамилии/позывному/табельному в подписи, по TG-аккаунту, по allowed-списку группы. Если неоднозначно — на ручную проверку.</p>
+</div>
+{% endblock %}

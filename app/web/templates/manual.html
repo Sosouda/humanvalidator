@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Ручная проверка — {{logs|length}} на очереди</h2>
+  <p style="color:#64748b">Сюда попадают: фото без подписи, неоднозначный сотрудник, несколько сотрудников, вне окна, редактированные/удаленные сообщения.</p>
+  {% for l in logs %}
+  <div style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:280px">
+      <b>{{l.tg_chat_id}}:{{l.tg_message_id}}</b> — {{l.date_time|msk}} (МСК)<br>
+      Подпись: <code>{{l.caption or "— пусто —"}}</code><br>
+      От: {{l.from_username or l.from_user_id or "—"}}<br>
+      {% if l.photo_ocr_datetime %}<small style="color:#16a34a">OCR с фото: {{l.photo_ocr_datetime|msk}}</small><br>{% endif %}
+      <small style="color:#b45309">{{l.reason}}</small><br>
+      <a href="{{l.base_link}}" target="_blank">🔗 первоисточник</a>
+    </div>
+    <form method="post" action="/manual/{{l.id}}/review" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+      <label>Сотрудник<br><select name="employee_id" required>
+        <option value="">— выбрать —</option>
+        {% for e in employees %}<option value="{{e.id}}" {% if l.employee_id==e.id %}selected{% endif %}>{{e.full_name}}</option>{% endfor %}
+      </select></label>
+      <label>Дата смены<br><input type="date" name="shift_date" value="{{l.shift_date or ''}}" required></label>
+      <button name="decision" value="accepted" class="btn btn-success">✓ Подтвердить 1</button>
+      <button name="decision" value="rejected" class="btn btn-danger">✕ Отклонить</button>
+    </form>
+  </div>
+  {% else %}
+  <p style="text-align:center;color:#16a34a;padding:20px">Очередь пуста — все очевидные случаи обработаны автоматически ✓</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+<h2>Пользователи — только для админа</h2>
+<p style="color:#64748b;font-size:13px">Админ видит всё, может добавлять группы/объекты/сотрудников и раздавать роли. Текущий: <b>{{current_user.username}} ({{current_user.role}})</b></p>
+<table>
+<thead><tr><th>Логин</th><th>Роль</th><th>Активен</th><th>Создан</th><th>Действия</th></tr></thead>
+<tbody>
+{% for u in users %}
+<tr>
+  <td>{{u.username}}</td>
+  <td><span class="badge {% if u.role=='admin' %}badge-accepted{% elif u.role=='operator' %}badge-manual{% else %}badge-rejected{% endif %}">{{u.role}}</span></td>
+  <td>{{"да" if u.is_active else "нет"}}</td>
+  <td>{{u.created_at.strftime("%Y-%m-%d") if u.created_at else ""}}</td>
+  <td style="display:flex;gap:6px;flex-wrap:wrap">
+    <form method="post" action="/users/{{u.id}}/role" style="display:flex;gap:4px">
+      <select name="role">
+        <option value="admin" {% if u.role=='admin' %}selected{% endif %}>admin</option>
+        <option value="operator" {% if u.role=='operator' %}selected{% endif %}>operator</option>
+        <option value="observer" {% if u.role=='observer' %}selected{% endif %}>observer</option>
+      </select>
+      <button class="btn btn-ghost" style="padding:4px 8px">сменить</button>
+    </form>
+    <form method="post" action="/users/{{u.id}}/toggle"><button class="btn btn-ghost" style="padding:4px 8px">{{"откл" if u.is_active else "вкл"}}</button></form>
+    <form method="post" action="/users/{{u.id}}/delete" onsubmit="return confirm('Удалить {{u.username}}?')"><button class="btn btn-danger" style="padding:4px 8px">удалить</button></form>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<form method="post" action="/users/add" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+<input name="username" placeholder="логин" required>
+<input name="password" type="password" placeholder="пароль" required>
+<select name="role">
+  <option value="observer">observer — таблица/группы/сотрудники + Excel</option>
+  <option value="operator">operator — всё кроме добавления + журнал/ручная</option>
+  <option value="admin">admin — всё + управление пользователями</option>
+</select>
+<button class="btn btn-primary">Добавить пользователя</button>
+</form>
+<p style="color:#64748b;font-size:12px">Наблюдатель видит таблицу/группы/сотрудников и экспорт. Оператор — все вкладки без добавления. Админ — всё.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Вход — TG→Смены</title>
+<style>
+*{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
+body{margin:0;background:#f6f7fb;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:32px;max-width:400px;width:100%}
+h2{margin:0 0 16px 0;text-align:center}
+input{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:12px}
+.btn{width:100%;padding:10px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+.btn:hover{background:#1d4ed8}
+.error{background:#fee2e2;color:#991b1b;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}
+.info{color:#64748b;font-size:12px;margin-top:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>📋 TG→Смены — вход</h2>
+  {% if error %}<div class="error">{{error}}</div>{% endif %}
+  <form method="post" action="/login">
+    <input name="username" placeholder="Логин" required autofocus>
+    <input name="password" type="password" placeholder="Пароль" required>
+    <button class="btn">Войти</button>
+  </form>
+  <div class="info">Роли: admin — всё, operator — журнал/ручная, observer — таблица/группы/сотрудники + Excel<br>Дефолт: admin / admin123 (из .env)</div>
+</div>
+</body>
+</html>
