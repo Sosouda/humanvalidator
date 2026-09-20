@@ -13,9 +13,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Код
 COPY app ./app
 COPY main.py ./
-COPY data/.gitkeep ./data/.gitkeep
 
-# Права: только app может писать в data/
+# Права: только app может писать в data/ (не требуем data/.gitkeep в контексте)
 RUN mkdir -p data && chown -R app:app /app && chmod 700 data
 
 USER app
