@@ -194,13 +194,30 @@ async def process_message(db: AsyncSession, payload: dict) -> MessageLog:
         ocr_text, ocr_dt, ocr_reason = await extract_datetime_neural(image_bytes, caption)
         ml.photo_ocr_text = ocr_text[:500] if ocr_text else ""
         ml.photo_ocr_datetime = ocr_dt
-        # комбинируем reason
         ml.vision_reason = f"{vision_reason} | {ocr_reason}"
         if ocr_dt:
+            # проверка соответствия даты на фото и времени отправки (должны совпадать в пределах допуска)
+            # приводим обе к МСК
+            import zoneinfo
+            tz = zoneinfo.ZoneInfo(settings.timezone)
+            msg_msk = dt.astimezone(tz) if dt.tzinfo else dt.replace(tzinfo=zoneinfo.ZoneInfo("UTC")).astimezone(tz)
+            ocr_msk = ocr_dt.astimezone(tz) if ocr_dt.tzinfo else ocr_dt
+            delta = abs((ocr_msk - msg_msk).total_seconds())
+            # допуск: 2 часа для времени + 1 день для даты (на случай полуночного перехода)
+            # если разница > 24ч или год отличается — точно не тот день
+            if delta > 24*3600 or ocr_msk.date() != msg_msk.date():
+                # дополнительно проверяем год: если год OCR != год сообщения — точно ручная
+                ml.status = ProcessingStatus.manual.value
+                ml.reason = f"дата на фото ({ocr_msk.strftime('%Y-%m-%d %H:%M МСК')}) не совпадает с временем сообщения ({msg_msk.strftime('%Y-%m-%d %H:%M МСК')}) diff={int(delta/3600)}ч -> ручная проверка | {ocr_reason}"
+                ml.shift_date = None
+                # сохраняем обе даты для аудита
+                ml.photo_ocr_text = (ocr_text[:200] + f" | msg={msg_msk} ocr={ocr_msk}")[:500]
+                db.add(ml)
+                await db.commit()
+                return ml
             dt_for_shift = ocr_dt
         else:
             dt_for_shift = dt
-            # строгий режим: если дата не считана — на ручную (требует точного времени с фото)
             if settings.vision_strict:
                 ml.status = ProcessingStatus.manual.value
                 ml.reason = f"нейронка: человек найден, но дата/время с фото не считаны -> ручная проверка | {ocr_reason} | caption='{caption}'"
