@@ -7,17 +7,25 @@
 <style>
 *{box-sizing:border-box;font-family:Inter,Arial,sans-serif}
 body{margin:0;background:#f6f7fb;color:#1a1a2e}
-nav{background:#1e293b;color:#fff;padding:12px 20px;display:flex;gap:18px;align-items:center;position:sticky;top:0;z-index:10}
-nav a{color:#cbd5e1;text-decoration:none;padding:6px 10px;border-radius:8px}
+nav{background:#1e293b;color:#fff;padding:10px 12px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:10;flex-wrap:wrap}
+nav a{color:#cbd5e1;text-decoration:none;padding:6px 8px;border-radius:8px;font-size:13px;white-space:nowrap}
 nav a.active,nav a:hover{background:#334155;color:#fff}
-.container{max-width:1300px;margin:20px auto;padding:0 16px}
-.card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:18px;margin-bottom:18px}
-h2{margin:0 0 12px 0}
+.container{max-width:1300px;margin:16px auto;padding:0 12px}
+@media(max-width:768px){.container{padding:0 8px;margin:12px auto}}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.06);padding:16px;margin-bottom:16px}
+@media(max-width:768px){.card{padding:12px;border-radius:12px}}
+h2{margin:0 0 12px 0;font-size:18px}
+@media(max-width:768px){h2{font-size:16px}}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center;vertical-align:top;word-break:break-word}
 th{background:#f1f5f9;position:sticky;top:58px;z-index:2;white-space:nowrap}
 td{white-space:normal}
-td:first-child,th:first-child{text-align:left;min-width:180px}
+td:first-child,th:first-child{text-align:left;min-width:200px}
+@media(max-width:768px){td, th{padding:5px 6px;font-size:12px} td:first-child,th:first-child{min-width:140px}}
+.view-toggle{display:flex;gap:6px;align-items:center;margin-left:auto}
+.view-toggle button{padding:6px 10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;cursor:pointer;font-size:12px;white-space:nowrap}
+.view-toggle button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+@media(max-width:768px){.view-toggle{width:100%;order:10;justify-content:center;margin-top:6px}}
 .cell-1{background:#dcfce7;font-weight:700}
 .totals{background:#fef9c3;font-weight:700}
 .badge{padding:2px 8px;border-radius:999px;font-size:12px}
@@ -38,21 +46,25 @@ input,select{padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px}
 </head>
 <body>
 <nav>
-  <b style="font-size:18px">📋 TG→Смены</b>
+  <b style="font-size:16px;white-space:nowrap">📋 TG→Смены</b>
   {% if current_user is defined and current_user %}
     <a href="/" class="{{'active' if request.url.path=='/' else ''}}">Таблица</a>
     <a href="/groups" class="{{'active' if '/groups' in request.url.path else ''}}">Группы</a>
     <a href="/employees" class="{{'active' if '/employees' in request.url.path else ''}}">Сотрудники</a>
     {% if current_user.role in ['admin','operator'] %}
       <a href="/journal" class="{{'active' if '/journal' in request.url.path else ''}}">Журнал</a>
-      <a href="/manual" class="{{'active' if '/manual' in request.url.path else ''}}">Ручная проверка</a>
+      <a href="/manual" class="{{'active' if '/manual' in request.url.path else ''}}">Ручная</a>
     {% endif %}
     {% if current_user.role == 'admin' %}
-      <a href="/users" class="{{'active' if '/users' in request.url.path else ''}}">Пользователи</a>
+      <a href="/users" class="{{'active' if '/users' in request.url.path else ''}}">Люди</a>
     {% endif %}
-    <span style="margin-left:auto;display:flex;gap:10px;align-items:center">
-      <span style="opacity:.8">{{current_user.username}} ({{current_user.role}})</span>
-      <a href="/logout" style="background:#475569;padding:6px 10px;border-radius:8px;color:#fff">Выйти</a>
+    <span class="view-toggle">
+      <button id="btn-desktop" onclick="setView('desktop')" title="Десктоп">💻</button>
+      <button id="btn-mobile" onclick="setView('mobile')" title="Мобилка">📱</button>
+    </span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <span style="opacity:.8;font-size:13px" class="hide-mobile">{{current_user.username}}</span>
+      <a href="/logout" style="background:#475569;padding:5px 8px;border-radius:8px;color:#fff;font-size:13px">Выйти</a>
     </span>
   {% else %}
     <a href="/login" style="margin-left:auto">Вход</a>
@@ -61,5 +73,27 @@ input,select{padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px}
 <div class="container">
 {% block content %}{% endblock %}
 </div>
+<script>
+function setView(v){localStorage.setItem('tg_view',v);applyView();}
+function applyView(){
+  var v=localStorage.getItem('tg_view');
+  if(!v) v= window.innerWidth<768 ? 'mobile' : 'desktop';
+  document.documentElement.setAttribute('data-view',v);
+  var bD=document.getElementById('btn-desktop'), bM=document.getElementById('btn-mobile');
+  if(bD) bD.classList.toggle('active', v==='desktop');
+  if(bM) bM.classList.toggle('active', v==='mobile');
+  document.querySelectorAll('.view-desktop').forEach(function(e){e.style.display=v==='desktop'?'':'none'});
+  document.querySelectorAll('.view-mobile').forEach(function(e){e.style.display=v==='mobile'?'':'none'});
+  document.body.classList.toggle('mobile-view', v==='mobile');
+}
+applyView();
+window.addEventListener('resize', function(){ if(!localStorage.getItem('tg_view')) applyView(); });
+</script>
+<style>
+.mobile-view .card{padding:12px}
+.mobile-view table{font-size:11px}
+.mobile-view th,.mobile-view td{padding:4px 6px}
+.mobile-view td:first-child,.mobile-view th:first-child{min-width:120px}
+</style>
 </body>
 </html>
