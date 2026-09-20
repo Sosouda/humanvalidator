@@ -65,13 +65,18 @@ async def schedule_recheck(tg_chat_id: int, tg_msg_id: int, employee_name: str, 
                 await db.commit()
                 return
             # если подпись не менялась — проверяем удаление через API (только для реальных чатов, с таймаутом)
+            # используем forward как проверку, но сразу удаляем форвард чтобы не спамить рабочий чат
             if settings.bot_token and settings.bot_token != "your_bot_token_here" and not str(tg_chat_id).startswith("-100999"):
                 try:
                     from telegram import Bot
                     bot = Bot(token=settings.bot_token)
                     try:
-                        # таймаут 5с чтобы не блокировать
-                        await asyncio.wait_for(bot.forward_message(chat_id=tg_chat_id, from_chat_id=tg_chat_id, message_id=tg_msg_id, disable_notification=True), timeout=5)
+                        fwd = await asyncio.wait_for(bot.forward_message(chat_id=tg_chat_id, from_chat_id=tg_chat_id, message_id=tg_msg_id, disable_notification=True), timeout=5)
+                        # сразу удаляем служебный форвард — он нужен только для проверки, не должен оставаться в чате
+                        try:
+                            await bot.delete_message(chat_id=tg_chat_id, message_id=fwd.message_id)
+                        except Exception:
+                            pass
                     except asyncio.TimeoutError:
                         log.debug("recheck forward timeout, skip")
                     except Exception as e:
